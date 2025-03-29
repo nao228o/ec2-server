@@ -44,9 +44,29 @@ resource "aws_subnet" "staging_subnet" {
 resource "aws_vpc" "staging_vpc" {
   cidr_block = "10.0.0.0/16"
 
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
   tags = {
     Name = "staging-vpc"
   }
+}
+
+resource "aws_vpc_dhcp_options" "dns_resolver" {
+  domain_name_servers = ["AmazonProvidedDNS"]
+  ntp_servers        = ["169.254.169.123"]
+  netbios_name_servers = ["169.254.169.123"]
+  netbios_node_type = 2
+
+  tags = {
+    Name = "staging-dhcp-options"
+  }
+}
+
+# VPCのDNS設定を有効化
+resource "aws_vpc_dhcp_options_association" "dns_resolver" {
+  vpc_id          = aws_vpc.staging_vpc.id
+  dhcp_options_id = aws_vpc_dhcp_options.dns_resolver.id
 }
 
 resource "aws_security_group" "staging_sg" {
